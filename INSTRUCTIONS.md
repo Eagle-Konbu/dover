@@ -27,6 +27,7 @@ Not allowed:
 - Runs on AWS Lambda.
 - Stateless execution.
 - Triggered once per day via Amazon EventBridge.
+- Sensitive credentials (Octopus Energy email/password) are stored in AWS Secrets Manager and retrieved at runtime.
 - Short execution time and low concurrency.
 
 Do not assume:

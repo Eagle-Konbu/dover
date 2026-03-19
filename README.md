@@ -25,6 +25,7 @@ This is a small, personal-use bot designed for simplicity and maintainability.
 - Language: Go
 - Runtime: AWS Lambda
 - Scheduler: Amazon EventBridge
+- Secrets: AWS Secrets Manager
 - Notification: Discord Webhook
 
 ---
@@ -41,6 +42,18 @@ This is a small, personal-use bot designed for simplicity and maintainability.
 | Name | Description |
 | ---- | ----------- |
 | DISCORD_WEBHOOK_URL | Discord Webhook URL |
+| OCTOPUS_API_URL | Octopus Energy GraphQL API endpoint |
+| OCTOPUS_ACCOUNT_NUMBER | Octopus Energy account number |
+| OCTOPUS_SECRET_NAME | Secrets Manager secret name for Octopus Energy credentials |
+
+## Secrets (AWS Secrets Manager)
+
+| Key | Description |
+| --- | ----------- |
+| email | Octopus Energy account email |
+| password | Octopus Energy account password |
+
+Stored as a single JSON secret. The secret name is specified by the `OCTOPUS_SECRET_NAME` environment variable.
 
 ---
 
