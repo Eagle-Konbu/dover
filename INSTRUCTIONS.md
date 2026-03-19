@@ -2,7 +2,7 @@
 
 This repository contains a small, personal Discord notification bot.
 
-The bot sends electric usage info once per day.
+The bot sends electricity usage info once per day.
 
 This project prioritizes simplicity, readability, and maintainability over extensibility or general-purpose design.
 
