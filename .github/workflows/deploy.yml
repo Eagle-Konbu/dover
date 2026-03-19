@@ -51,8 +51,13 @@ jobs:
         run: task apply-ci
 
       - name: Update Octopus Energy credentials
+        env:
+          OCTOPUS_EMAIL: ${{ secrets.OCTOPUS_EMAIL }}
+          OCTOPUS_PASSWORD: ${{ secrets.OCTOPUS_PASSWORD }}
         run: |
           SECRET_ARN=$(cd terraform && terraform output -raw secrets_manager_secret_arn)
+          SECRET_STRING=$(jq -n --arg email "$OCTOPUS_EMAIL" --arg password "$OCTOPUS_PASSWORD" \
+            '{email: $email, password: $password}')
           aws secretsmanager put-secret-value \
             --secret-id "$SECRET_ARN" \
-            --secret-string '{"email":"${{ secrets.OCTOPUS_EMAIL }}","password":"${{ secrets.OCTOPUS_PASSWORD }}"}'
+            --secret-string "$SECRET_STRING"
