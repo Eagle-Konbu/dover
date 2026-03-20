@@ -1,0 +1,121 @@
+name: Terraform CI
+
+on:
+  pull_request:
+    paths:
+      - 'terraform/**'
+      - '.github/workflows/terraform-ci.yml'
+      - 'Taskfile.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive -diff
+        working-directory: terraform
+
+  validate:
+    name: Validate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Setup Task
+        uses: go-task/setup-task@v1
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Terraform Init
+        run: terraform init -backend=false
+        working-directory: terraform
+
+      - name: Build and package Lambda
+        run: task package
+
+      - name: Terraform Validate
+        run: terraform validate
+        working-directory: terraform
+
+  lint:
+    name: Lint (TFLint)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Setup TFLint
+        uses: terraform-linters/setup-tflint@v4
+
+      - name: TFLint Init
+        run: tflint --init
+        working-directory: terraform
+
+      - name: TFLint Run
+        run: tflint --format compact
+        working-directory: terraform
+
+  security:
+    name: Security Scan (tfsec)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tfsec
+        uses: aquasecurity/tfsec-action@v1.0.3
+        with:
+          working_directory: terraform
+          soft_fail: true
+
+      - name: Post tfsec findings
+        uses: aquasecurity/tfsec-pr-commenter-action@v1.3.1
+        with:
+          working_directory: terraform
+          soft_fail_commenter: true
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  version-check:
+    name: Version Consistency Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check required_version constraint
+        run: |
+          if ! grep -q 'required_version' terraform/versions.tf 2>/dev/null; then
+            echo "::error::required_version constraint not found in terraform/versions.tf"
+            exit 1
+          fi
+
+          CONSTRAINT=$(grep 'required_version' terraform/versions.tf | sed 's/.*"\(.*\)".*/\1/')
+          echo "Found version constraint: $CONSTRAINT"
+
+          if echo "$CONSTRAINT" | grep -qE '^[><=~!]+\s' || echo "$CONSTRAINT" | grep -qE '^\s*$'; then
+            echo "::warning::Version constraint '$CONSTRAINT' may not be specific enough. Consider using an exact version or tight range."
+          fi
