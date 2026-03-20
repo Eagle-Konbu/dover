@@ -57,4 +57,4 @@ jobs:
       - name: Post plan comment
         uses: towardsthecloud/terraform-plan-pr-commenter@v1
         with:
-          terraform-plan-file: terraform/tfplan.binary
+          planfile: terraform/tfplan.binary
