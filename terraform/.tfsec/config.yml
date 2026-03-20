@@ -1,0 +1,7 @@
+---
+exclude:
+  # Log group ARN requires :* suffix to target log streams — not a true wildcard
+  - aws-iam-no-policy-wildcards
+  # Default AWS encryption is sufficient for this personal project
+  - aws-cloudwatch-log-group-customer-key
+  - aws-ssm-secret-use-customer-key

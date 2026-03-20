@@ -46,16 +46,22 @@ jobs:
 
       - name: Terraform Plan
         run: task plan
+        env:
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TF_VAR_octopus_account_number: ${{ secrets.OCTOPUS_ACCOUNT_NUMBER }}
 
       - name: Terraform Apply
         run: task apply-ci
+        env:
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TF_VAR_octopus_account_number: ${{ secrets.OCTOPUS_ACCOUNT_NUMBER }}
 
       - name: Update Octopus Energy credentials
         env:
           OCTOPUS_EMAIL: ${{ secrets.OCTOPUS_EMAIL }}
           OCTOPUS_PASSWORD: ${{ secrets.OCTOPUS_PASSWORD }}
         run: |
-          SECRET_ARN=$(cd terraform && terraform output -raw secrets_manager_secret_arn)
+          SECRET_ARN=$(cd terraform && terraform output -raw secret_arn)
           SECRET_STRING=$(jq -n --arg email "$OCTOPUS_EMAIL" --arg password "$OCTOPUS_PASSWORD" \
             '{email: $email, password: $password}')
           aws secretsmanager put-secret-value \

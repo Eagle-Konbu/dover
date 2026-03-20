@@ -50,8 +50,12 @@ jobs:
       - name: Terraform Plan
         run: terraform plan -input=false -out=tfplan.binary
         working-directory: terraform
+        env:
+          TF_VAR_discord_webhook_url: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          TF_VAR_octopus_account_number: ${{ secrets.OCTOPUS_ACCOUNT_NUMBER }}
 
       - name: Post plan comment
         uses: towardsthecloud/terraform-plan-pr-commenter@v1
         with:
-          terraform-plan-file: terraform/tfplan.binary
+          planfile: tfplan.binary
+          working-directory: terraform
