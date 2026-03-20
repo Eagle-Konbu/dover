@@ -14,6 +14,7 @@ import (
 
 type Client struct {
 	gqlClient     *graphql.Client
+	HTTPClient    *http.Client
 	Email         string
 	Password      string
 	APIURL        string
@@ -21,9 +22,16 @@ type Client struct {
 	token         string
 }
 
-type ObtainJSONWebTokenInput struct {
+type obtainJSONWebTokenInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
+}
+
+func (c *Client) httpClient() *http.Client {
+	if c.HTTPClient != nil {
+		return c.HTTPClient
+	}
+	return &http.Client{Timeout: 30 * time.Second}
 }
 
 func (c *Client) ensureToken(ctx context.Context) error {
@@ -31,7 +39,7 @@ func (c *Client) ensureToken(ctx context.Context) error {
 		return nil
 	}
 
-	unauthClient := graphql.NewClient(c.APIURL, nil)
+	unauthClient := graphql.NewClient(c.APIURL, c.httpClient())
 
 	var m struct {
 		ObtainKrakenToken struct {
@@ -39,7 +47,7 @@ func (c *Client) ensureToken(ctx context.Context) error {
 		} `graphql:"obtainKrakenToken(input: $input)"`
 	}
 	vars := map[string]interface{}{
-		"input": ObtainJSONWebTokenInput{
+		"input": obtainJSONWebTokenInput{
 			Email:    c.Email,
 			Password: c.Password,
 		},
@@ -52,7 +60,7 @@ func (c *Client) ensureToken(ctx context.Context) error {
 	}
 
 	c.token = m.ObtainKrakenToken.Token
-	c.gqlClient = graphql.NewClient(c.APIURL, nil).WithRequestModifier(func(r *http.Request) {
+	c.gqlClient = graphql.NewClient(c.APIURL, c.httpClient()).WithRequestModifier(func(r *http.Request) {
 		r.Header.Set("Authorization", "JWT "+c.token)
 	})
 	return nil
@@ -63,6 +71,7 @@ func (c *Client) FetchDailyReadings(ctx context.Context, date time.Time) ([]doma
 		return nil, err
 	}
 
+	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	from := date
 	to := date.Add(24 * time.Hour)
 
