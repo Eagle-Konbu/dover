@@ -239,21 +239,7 @@ func TestClient_EnsureToken(t *testing.T) {
 
 func TestClient_FetchDailyCost(t *testing.T) {
 	t.Run("returns not yet supported error", func(t *testing.T) {
-		callCount := 0
-		srv := newFakeServer(t, func(w http.ResponseWriter, _ *http.Request) {
-			callCount++
-			if callCount == 1 {
-				writeJSON(t, w, tokenResponse)
-				return
-			}
-		})
-
-		c := &octopus.Client{
-			Email:         "test@example.com",
-			Password:      "pass",
-			APIURL:        srv.URL,
-			AccountNumber: "A-12345",
-		}
+		c := &octopus.Client{}
 		_, err := c.FetchDailyCost(context.Background(), time.Now())
 		if err == nil {
 			t.Fatal("expected error, got nil")

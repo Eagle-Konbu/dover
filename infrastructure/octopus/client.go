@@ -73,7 +73,7 @@ func (c *Client) FetchDailyReadings(ctx context.Context, date time.Time) ([]doma
 
 	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, date.Location())
 	from := date
-	to := date.Add(24 * time.Hour)
+	to := date.AddDate(0, 0, 1)
 
 	var q struct {
 		Account struct {
@@ -116,10 +116,7 @@ func (c *Client) FetchDailyReadings(ctx context.Context, date time.Time) ([]doma
 	return readings, nil
 }
 
-func (c *Client) FetchDailyCost(ctx context.Context, _ time.Time) (float64, error) {
-	if err := c.ensureToken(ctx); err != nil {
-		return 0, err
-	}
+func (c *Client) FetchDailyCost(_ context.Context, _ time.Time) (float64, error) {
 	// costOfCharge query shape is not yet confirmed from the API.
 	return 0, fmt.Errorf("octopus: fetch cost: not yet supported")
 }
