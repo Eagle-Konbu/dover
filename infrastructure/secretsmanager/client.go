@@ -32,14 +32,3 @@ func (c *Client) GetSecretValue(ctx context.Context, name string) (string, error
 	}
 	return *out.SecretString, nil
 }
-
-func (c *Client) PutSecretValue(ctx context.Context, name string, value string) error {
-	_, err := c.client.PutSecretValue(ctx, &secretsmanager.PutSecretValueInput{
-		SecretId:     &name,
-		SecretString: &value,
-	})
-	if err != nil {
-		return fmt.Errorf("secretsmanager: put %q: %w", name, err)
-	}
-	return nil
-}
