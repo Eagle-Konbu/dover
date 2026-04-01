@@ -75,11 +75,11 @@ func TestSendDailyReport_WithCost(t *testing.T) {
 	if len(e.Fields) != 2 {
 		t.Fatalf("fields count = %d, want 2", len(e.Fields))
 	}
-	if e.Fields[0].Name != "使用量" || e.Fields[0].Value != "12.5 kWh" || !e.Fields[0].Inline {
-		t.Errorf("field[0] = %+v, want 使用量/12.5 kWh/inline", e.Fields[0])
+	if e.Fields[0].Name != "🔌 使用量" || e.Fields[0].Value != "12.5 kWh" || !e.Fields[0].Inline {
+		t.Errorf("field[0] = %+v, want 🔌 使用量/12.5 kWh/inline", e.Fields[0])
 	}
-	if e.Fields[1].Name != "料金" || e.Fields[1].Value != "¥350" || !e.Fields[1].Inline {
-		t.Errorf("field[1] = %+v, want 料金/¥350/inline", e.Fields[1])
+	if e.Fields[1].Name != "💴 料金" || e.Fields[1].Value != "¥350" || !e.Fields[1].Inline {
+		t.Errorf("field[1] = %+v, want 💴 料金/¥350/inline", e.Fields[1])
 	}
 }
 
@@ -116,8 +116,8 @@ func TestSendDailyReport_WithoutCost(t *testing.T) {
 	if len(got.Embeds[0].Fields) != 1 {
 		t.Fatalf("fields count = %d, want 1 (no cost field)", len(got.Embeds[0].Fields))
 	}
-	if got.Embeds[0].Fields[0].Name != "使用量" {
-		t.Errorf("field[0].Name = %q, want 使用量", got.Embeds[0].Fields[0].Name)
+	if got.Embeds[0].Fields[0].Name != "🔌 使用量" {
+		t.Errorf("field[0].Name = %q, want 🔌 使用量", got.Embeds[0].Fields[0].Name)
 	}
 }
 

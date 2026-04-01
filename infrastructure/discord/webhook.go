@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/Eagle-Konbu/dover/domain"
@@ -35,14 +36,14 @@ type webhookPayload struct {
 func (w *Webhook) SendDailyReport(ctx context.Context, usage domain.DailyUsage) error {
 	fields := []embedField{
 		{
-			Name:   "使用量",
+			Name:   "🔌 使用量",
 			Value:  fmt.Sprintf("%.1f kWh", usage.TotalKWh),
 			Inline: true,
 		},
 	}
 	if usage.HasCost {
 		fields = append(fields, embedField{
-			Name:   "料金",
+			Name:   "💴 料金",
 			Value:  fmt.Sprintf("¥%.0f", usage.CostYen),
 			Inline: true,
 		})
@@ -78,7 +79,11 @@ func (w *Webhook) SendDailyReport(ctx context.Context, usage domain.DailyUsage) 
 	defer resp.Body.Close()
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("discord webhook: unexpected status code: %d", resp.StatusCode)
+		respBody, err := io.ReadAll(io.LimitReader(resp.Body, 512))
+		if err != nil {
+			return fmt.Errorf("discord webhook: unexpected status code: %d", resp.StatusCode)
+		}
+		return fmt.Errorf("discord webhook: unexpected status code: %d: %s", resp.StatusCode, string(respBody))
 	}
 
 	return nil
