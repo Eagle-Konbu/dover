@@ -6,6 +6,7 @@ require (
 	github.com/aws/aws-lambda-go v1.53.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.12
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.41.4
+	github.com/hasura/go-graphql-client v0.15.1
 )
 
 require (
@@ -22,4 +23,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.9 // indirect
 	github.com/aws/smithy-go v1.24.2 // indirect
+	github.com/coder/websocket v1.8.13 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 )
