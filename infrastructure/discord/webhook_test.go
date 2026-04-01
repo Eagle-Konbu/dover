@@ -3,9 +3,11 @@ package discord_test
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -125,7 +127,9 @@ func TestSendDailyReport_HTTPError(t *testing.T) {
 	t.Parallel()
 
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
-		w.WriteHeader(http.StatusInternalServerError)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, `{"message":"Invalid Form Body"}`)
 	}))
 	defer srv.Close()
 
@@ -137,6 +141,27 @@ func TestSendDailyReport_HTTPError(t *testing.T) {
 
 	err := wh.SendDailyReport(context.Background(), usage)
 	if err == nil {
-		t.Fatal("expected error for 500 response, got nil")
+		t.Fatal("expected error for 400 response, got nil")
+	}
+	if !strings.Contains(err.Error(), "400") {
+		t.Errorf("error should contain status code 400, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "Invalid Form Body") {
+		t.Errorf("error should contain response body, got: %v", err)
+	}
+}
+
+func TestSendDailyReport_InvalidURL(t *testing.T) {
+	t.Parallel()
+
+	wh := &discord.Webhook{URL: "http://localhost:0/invalid"}
+	usage := domain.DailyUsage{
+		Date:     time.Date(2025, 1, 15, 0, 0, 0, 0, time.UTC),
+		TotalKWh: 10.0,
+	}
+
+	err := wh.SendDailyReport(context.Background(), usage)
+	if err == nil {
+		t.Fatal("expected error for invalid URL, got nil")
 	}
 }
