@@ -12,11 +12,11 @@ func TestAggregateDailyUsage(t *testing.T) {
 
 	t.Run("sums readings", func(t *testing.T) {
 		readings := []domain.Reading{
-			{Value: 0.5},
-			{Value: 1.2},
-			{Value: 0.3},
+			{Value: 0.5, CostEstimate: 50.0},
+			{Value: 1.2, CostEstimate: 100.0},
+			{Value: 0.3, CostEstimate: 0.0},
 		}
-		got := domain.AggregateDailyUsage(date, readings, 150.0, true)
+		got := domain.AggregateDailyUsage(date, readings)
 
 		if got.Date != date {
 			t.Errorf("Date = %v, want %v", got.Date, date)
@@ -34,7 +34,7 @@ func TestAggregateDailyUsage(t *testing.T) {
 	})
 
 	t.Run("empty readings", func(t *testing.T) {
-		got := domain.AggregateDailyUsage(date, nil, 0, false)
+		got := domain.AggregateDailyUsage(date, nil)
 		if got.TotalKWh != 0 {
 			t.Errorf("TotalKWh = %f, want 0", got.TotalKWh)
 		}

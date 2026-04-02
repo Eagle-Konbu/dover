@@ -24,13 +24,7 @@ func (s *ReportService) Run(ctx context.Context) error {
 		return fmt.Errorf("fetch readings: %w", err)
 	}
 
-	costYen, err := s.Energy.FetchDailyCost(ctx, yesterday)
-	hasCost := err == nil
-	if !hasCost {
-		costYen = 0
-	}
-
-	usage := domain.AggregateDailyUsage(yesterday, readings, costYen, hasCost)
+	usage := domain.AggregateDailyUsage(yesterday, readings)
 
 	if err := s.Notifier.SendDailyReport(ctx, usage); err != nil {
 		return fmt.Errorf("send report: %w", err)

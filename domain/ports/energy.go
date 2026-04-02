@@ -9,5 +9,4 @@ import (
 
 type EnergyClient interface {
 	FetchDailyReadings(ctx context.Context, date time.Time) ([]domain.Reading, error)
-	FetchDailyCost(ctx context.Context, date time.Time) (float64, error)
 }
