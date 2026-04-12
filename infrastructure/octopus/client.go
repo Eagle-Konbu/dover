@@ -80,9 +80,10 @@ func (c *Client) FetchDailyReadings(ctx context.Context, date time.Time) ([]doma
 			Properties []struct {
 				ElectricitySupplyPoints []struct {
 					HalfHourlyReadings []struct {
-						StartAt time.Time `scalar:"true"`
-						EndAt   time.Time `scalar:"true"`
-						Value   string
+						StartAt      time.Time `scalar:"true"`
+						EndAt        time.Time `scalar:"true"`
+						Value        string
+						CostEstimate string
 					} `graphql:"halfHourlyReadings(fromDatetime: $fromDatetime, toDatetime: $toDatetime)"`
 				}
 			}
@@ -105,18 +106,18 @@ func (c *Client) FetchDailyReadings(ctx context.Context, date time.Time) ([]doma
 				if err != nil {
 					return nil, fmt.Errorf("octopus: parse reading value %q: %w", hr.Value, err)
 				}
+				ce, err := strconv.ParseFloat(hr.CostEstimate, 64)
+				if err != nil {
+					return nil, fmt.Errorf("octopus: parse cost estimate %q: %w", hr.CostEstimate, err)
+				}
 				readings = append(readings, domain.Reading{
-					StartAt: hr.StartAt,
-					EndAt:   hr.EndAt,
-					Value:   v,
+					StartAt:      hr.StartAt,
+					EndAt:        hr.EndAt,
+					Value:        v,
+					CostEstimate: ce,
 				})
 			}
 		}
 	}
 	return readings, nil
-}
-
-func (c *Client) FetchDailyCost(_ context.Context, _ time.Time) (float64, error) {
-	// costOfCharge query shape is not yet confirmed from the API.
-	return 0, fmt.Errorf("octopus: fetch cost: not yet supported")
 }

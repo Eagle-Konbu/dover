@@ -2,7 +2,6 @@ package application_test
 
 import (
 	"context"
-	"errors"
 	"testing"
 	"time"
 
@@ -11,17 +10,11 @@ import (
 )
 
 type mockEnergyClient struct {
-	costErr  error
 	readings []domain.Reading
-	cost     float64
 }
 
 func (m *mockEnergyClient) FetchDailyReadings(_ context.Context, _ time.Time) ([]domain.Reading, error) {
 	return m.readings, nil
-}
-
-func (m *mockEnergyClient) FetchDailyCost(_ context.Context, _ time.Time) (float64, error) {
-	return m.cost, m.costErr
 }
 
 type mockNotifier struct {
@@ -38,8 +31,10 @@ func (m *mockNotifier) SendDailyReport(_ context.Context, usage domain.DailyUsag
 func TestReportService_Run(t *testing.T) {
 	t.Run("aggregates and notifies", func(t *testing.T) {
 		energy := &mockEnergyClient{
-			readings: []domain.Reading{{Value: 1.0}, {Value: 2.0}},
-			cost:     300.0,
+			readings: []domain.Reading{
+				{Value: 1.0, CostEstimate: 100.0},
+				{Value: 2.0, CostEstimate: 200.0},
+			},
 		}
 		notifier := &mockNotifier{}
 		svc := &application.ReportService{Energy: energy, Notifier: notifier}
@@ -53,15 +48,17 @@ func TestReportService_Run(t *testing.T) {
 		if notifier.usage.TotalKWh != 3.0 {
 			t.Errorf("TotalKWh = %f, want 3.0", notifier.usage.TotalKWh)
 		}
+		if notifier.usage.CostYen != 300.0 {
+			t.Errorf("CostYen = %f, want 300.0", notifier.usage.CostYen)
+		}
 		if !notifier.usage.HasCost {
 			t.Error("HasCost = false, want true")
 		}
 	})
 
-	t.Run("cost error results in HasCost false", func(t *testing.T) {
+	t.Run("empty readings results in HasCost false", func(t *testing.T) {
 		energy := &mockEnergyClient{
-			readings: []domain.Reading{{Value: 1.5}},
-			costErr:  errors.New("not available"),
+			readings: []domain.Reading{},
 		}
 		notifier := &mockNotifier{}
 		svc := &application.ReportService{Energy: energy, Notifier: notifier}

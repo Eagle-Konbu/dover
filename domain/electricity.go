@@ -3,9 +3,10 @@ package domain
 import "time"
 
 type Reading struct {
-	StartAt time.Time
-	EndAt   time.Time
-	Value   float64
+	StartAt      time.Time
+	EndAt        time.Time
+	Value        float64
+	CostEstimate float64
 }
 
 type DailyUsage struct {
@@ -15,15 +16,16 @@ type DailyUsage struct {
 	HasCost  bool
 }
 
-func AggregateDailyUsage(date time.Time, readings []Reading, costYen float64, hasCost bool) DailyUsage {
-	var total float64
+func AggregateDailyUsage(date time.Time, readings []Reading) DailyUsage {
+	var totalKWh, totalCost float64
 	for _, r := range readings {
-		total += r.Value
+		totalKWh += r.Value
+		totalCost += r.CostEstimate
 	}
 	return DailyUsage{
 		Date:     date,
-		TotalKWh: total,
-		CostYen:  costYen,
-		HasCost:  hasCost,
+		TotalKWh: totalKWh,
+		CostYen:  totalCost,
+		HasCost:  len(readings) > 0,
 	}
 }

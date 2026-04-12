@@ -23,13 +23,14 @@ const tokenResponse = `{
 func readingsResponse(t *testing.T, readings []map[string]string) string {
 	t.Helper()
 	type gqlReading struct {
-		StartAt string `json:"startAt"`
-		EndAt   string `json:"endAt"`
-		Value   string `json:"value"`
+		StartAt      string `json:"startAt"`
+		EndAt        string `json:"endAt"`
+		Value        string `json:"value"`
+		CostEstimate string `json:"costEstimate"`
 	}
 	var rs []gqlReading
 	for _, r := range readings {
-		rs = append(rs, gqlReading{StartAt: r["startAt"], EndAt: r["endAt"], Value: r["value"]})
+		rs = append(rs, gqlReading{StartAt: r["startAt"], EndAt: r["endAt"], Value: r["value"], CostEstimate: r["costEstimate"]})
 	}
 	resp := map[string]interface{}{
 		"data": map[string]interface{}{
@@ -84,8 +85,8 @@ func TestClient_FetchDailyReadings(t *testing.T) {
 			}
 
 			writeJSON(t, w, readingsResponse(t, []map[string]string{
-				{"startAt": "2025-01-15T00:00:00Z", "endAt": "2025-01-15T00:30:00Z", "value": "0.5"},
-				{"startAt": "2025-01-15T00:30:00Z", "endAt": "2025-01-15T01:00:00Z", "value": "1.2"},
+				{"startAt": "2025-01-15T00:00:00Z", "endAt": "2025-01-15T00:30:00Z", "value": "0.5", "costEstimate": "50.0"},
+				{"startAt": "2025-01-15T00:30:00Z", "endAt": "2025-01-15T01:00:00Z", "value": "1.2", "costEstimate": "75.5"},
 			}))
 		})
 
@@ -108,6 +109,12 @@ func TestClient_FetchDailyReadings(t *testing.T) {
 		}
 		if readings[1].Value != 1.2 {
 			t.Errorf("readings[1].Value = %f, want 1.2", readings[1].Value)
+		}
+		if readings[0].CostEstimate != 50.0 {
+			t.Errorf("readings[0].CostEstimate = %f, want 50.0", readings[0].CostEstimate)
+		}
+		if readings[1].CostEstimate != 75.5 {
+			t.Errorf("readings[1].CostEstimate = %f, want 75.5", readings[1].CostEstimate)
 		}
 	})
 
@@ -146,7 +153,7 @@ func TestClient_FetchDailyReadings(t *testing.T) {
 				return
 			}
 			writeJSON(t, w, readingsResponse(t, []map[string]string{
-				{"startAt": "2025-01-15T00:00:00Z", "endAt": "2025-01-15T00:30:00Z", "value": "not-a-number"},
+				{"startAt": "2025-01-15T00:00:00Z", "endAt": "2025-01-15T00:30:00Z", "value": "not-a-number", "costEstimate": "50.0"},
 			}))
 		})
 
@@ -162,6 +169,34 @@ func TestClient_FetchDailyReadings(t *testing.T) {
 		}
 		if !strings.Contains(err.Error(), "parse reading value") {
 			t.Errorf("error = %q, want it to contain %q", err.Error(), "parse reading value")
+		}
+	})
+
+	t.Run("invalid costEstimate returns error", func(t *testing.T) {
+		callCount := 0
+		srv := newFakeServer(t, func(w http.ResponseWriter, _ *http.Request) {
+			callCount++
+			if callCount == 1 {
+				writeJSON(t, w, tokenResponse)
+				return
+			}
+			writeJSON(t, w, readingsResponse(t, []map[string]string{
+				{"startAt": "2025-01-15T00:00:00Z", "endAt": "2025-01-15T00:30:00Z", "value": "0.5", "costEstimate": "not-a-number"},
+			}))
+		})
+
+		c := &octopus.Client{
+			Email:         "test@example.com",
+			Password:      "pass",
+			APIURL:        srv.URL,
+			AccountNumber: "A-12345",
+		}
+		_, err := c.FetchDailyReadings(context.Background(), time.Now())
+		if err == nil {
+			t.Fatal("expected error, got nil")
+		}
+		if !strings.Contains(err.Error(), "parse cost estimate") {
+			t.Errorf("error = %q, want it to contain %q", err.Error(), "parse cost estimate")
 		}
 	})
 }
@@ -233,19 +268,6 @@ func TestClient_EnsureToken(t *testing.T) {
 		}
 		if tokenCalls != 1 {
 			t.Errorf("token mutations = %d, want 1", tokenCalls)
-		}
-	})
-}
-
-func TestClient_FetchDailyCost(t *testing.T) {
-	t.Run("returns not yet supported error", func(t *testing.T) {
-		c := &octopus.Client{}
-		_, err := c.FetchDailyCost(context.Background(), time.Now())
-		if err == nil {
-			t.Fatal("expected error, got nil")
-		}
-		if !strings.Contains(err.Error(), "not yet supported") {
-			t.Errorf("error = %q, want it to contain %q", err.Error(), "not yet supported")
 		}
 	})
 }
