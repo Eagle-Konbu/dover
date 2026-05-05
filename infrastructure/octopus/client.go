@@ -27,6 +27,8 @@ type obtainJSONWebTokenInput struct {
 	Password string `json:"password"`
 }
 
+func (obtainJSONWebTokenInput) GetGraphQLType() string { return "ObtainJSONWebTokenInput" }
+
 func (c *Client) httpClient() *http.Client {
 	if c.HTTPClient != nil {
 		return c.HTTPClient
