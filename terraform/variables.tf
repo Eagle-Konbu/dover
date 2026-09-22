@@ -7,7 +7,7 @@ variable "discord_webhook_url" {
 variable "octopus_api_url" {
   description = "Octopus Energy GraphQL API endpoint"
   type        = string
-  default     = "https://api.oejp-kraken.energy/v1/graphql"
+  default     = "https://api.oejp-kraken.energy/v1/graphql/"
 }
 
 variable "octopus_account_number" {
